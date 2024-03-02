@@ -1,4 +1,4 @@
-import express from 'express'
+import express, {Request, Response} from 'express'
 
 const app = express()
 const port = process.env.PORT || 3000
@@ -15,7 +15,10 @@ const DB = {
     ]
 };
 
-app.get('/courses', (req, res) => {
+app.get('/', (req: Request, res: Response) => {
+    res.send("Hi, i'm working")
+})
+app.get('/courses', (req: Request, res: Response) => {
     let foundCourse = DB.courses
 
     if(req.query.title) {
@@ -25,7 +28,7 @@ app.get('/courses', (req, res) => {
 
     res.json(foundCourse)
 })
-app.get('/courses/:id', (req, res) => {
+app.get('/courses/:id', (req: Request, res: Response) => {
     const foundCourse = DB.courses.find(c => c.id === +req.params.id);
 
     if (!foundCourse) {
@@ -35,7 +38,7 @@ app.get('/courses/:id', (req, res) => {
 
     res.json(foundCourse)
 })
-app.post('/courses', (req, res) => {
+app.post('/courses', (req: Request, res: Response) => {
     if(!req.body.title) {
         res.sendStatus(400)
         return;
@@ -51,12 +54,12 @@ app.post('/courses', (req, res) => {
         .status(201)
         .json(createdCourse)
 })
-app.delete('/courses/:id', (req, res) => {
+app.delete('/courses/:id', (req: Request, res: Response) => {
     DB.courses = DB.courses.filter(c => c.id !== +req.params.id);
 
     res.sendStatus(204)
 })
-app.put('/courses/:id', (req, res) => {
+app.put('/courses/:id', (req: Request, res: Response) => {
     if(!req.body.title) {
         res.sendStatus(400)
         return;

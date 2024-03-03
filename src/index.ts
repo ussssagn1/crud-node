@@ -35,12 +35,18 @@ export const HTTP_STATUSES = {
     NOT_FOUND_404: 404
 }
 
+const getCourseViewModel = (DB_COURSE: CourseType): CourseViewModel => {
+    return {
+        id: DB_COURSE.id,
+        title: DB_COURSE.title
+    }
+}
 
 app.get('/', (req: Request, res: Response) => {
     res.send("Hi, i'm working")
 })
 app.get('/courses', (req: RequestWithQuery<CoursesQueryInputModel>, res: Response<CourseViewModel[]>) => {
-    req.query.title ? res.send(DB.courses.filter(p => p.title.indexOf(req.query.title) > -1)) : res.send(DB.courses.map(dbCourse => {return {id: dbCourse.id, title: dbCourse.title}}))
+    req.query.title ? res.send(DB.courses.filter(p => p.title.indexOf(req.query.title) > -1)) : res.send(DB.courses.map(getCourseViewModel))
 })
 app.get('/courses/:id', (req: RequestWithParams<URIParamsCourseldModel>, res: Response<CourseViewModel>) => {
     const foundCourse = DB.courses.find(c => c.id === +req.params.id);
@@ -50,10 +56,7 @@ app.get('/courses/:id', (req: RequestWithParams<URIParamsCourseldModel>, res: Re
         return;
     }
 
-    res.json({
-        id: foundCourse.id,
-        title: foundCourse.title
-    })
+    res.json(getCourseViewModel(foundCourse))
 })
 app.post('/courses', (req: RequestWithBody<CourseCreateInputModel>, res: Response<CourseViewModel>) => {
     if(!req.body.title) {
@@ -69,7 +72,7 @@ app.post('/courses', (req: RequestWithBody<CourseCreateInputModel>, res: Respons
     DB.courses.push(createdCourse)
     res
         .status(HTTP_STATUSES.CREATED_201)
-        .json(createdCourse)
+        .json(getCourseViewModel(createdCourse))
 })
 app.delete('/courses/:id', (req: RequestWithParams<URIParamsCourseldModel>, res) => {
     for(let i = 0; i < DB.courses.length; ++i) {

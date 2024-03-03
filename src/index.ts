@@ -1,5 +1,16 @@
 import express, {Request, Response} from 'express'
 import bodyParser from "body-parser";
+import {RequestWithBody, RequestWithParams, RequestWithParamsAndBody, RequestWithQuery} from "./types";
+import {CourseCreateInputModel} from "./models/CourseCreateModel"; // тип создания
+import {CoursesQueryInputModel} from "./models/CoursesQueryModel"; // тип query параметра
+import {CourseUpdateInputModel} from "./models/CourseUpdateModel";
+import {CourseViewModel} from "./models/CourseViewModel";
+import {URIParamsCourseldModel} from "./models/URIParamsCourseldModel"; // тип обновления курса
+
+type CourseType = { // тип курса
+    id: number,
+    title: string,
+}
 
 export const app = express()
 const port = process.env.PORT || 3000
@@ -7,7 +18,7 @@ const port = process.env.PORT || 3000
 const jsonBodyMiddleware = bodyParser({})
 app.use(jsonBodyMiddleware)
 
-const DB = {
+const DB: { courses: CourseType[]} = { // указываем какой тип у нашего DB.courses
     courses: [
         {id: 1, title: 'front-end'},
         {id: 2, title: 'back-end'},
@@ -28,15 +39,10 @@ export const HTTP_STATUSES = {
 app.get('/', (req: Request, res: Response) => {
     res.send("Hi, i'm working")
 })
-app.get('/courses', (req: Request, res: Response) => {
-    if(req.query.title) {
-        let searchString = req.query.title.toString()
-        res.send(DB.courses.filter(p => p.title.indexOf(searchString) > -1))
-    } else {
-        res.send(DB.courses)
-    }
+app.get('/courses', (req: RequestWithQuery<CoursesQueryInputModel>, res: Response<CourseViewModel[]>) => {
+    req.query.title ? res.send(DB.courses.filter(p => p.title.indexOf(req.query.title) > -1)) : res.send(DB.courses.map(dbCourse => {return {id: dbCourse.id, title: dbCourse.title}}))
 })
-app.get('/courses/:id', (req: Request, res: Response) => {
+app.get('/courses/:id', (req: RequestWithParams<URIParamsCourseldModel>, res: Response<CourseViewModel>) => {
     const foundCourse = DB.courses.find(c => c.id === +req.params.id);
 
     if (!foundCourse) {
@@ -44,17 +50,20 @@ app.get('/courses/:id', (req: Request, res: Response) => {
         return;
     }
 
-    res.json(foundCourse)
+    res.json({
+        id: foundCourse.id,
+        title: foundCourse.title
+    })
 })
-app.post('/courses', (req: Request, res: Response) => {
+app.post('/courses', (req: RequestWithBody<CourseCreateInputModel>, res: Response<CourseViewModel>) => {
     if(!req.body.title) {
         res.sendStatus(HTTP_STATUSES.BAD_REQUEST_400)
         return;
     }
 
-    const createdCourse = {
+    const createdCourse: CourseType = {
         id: +(new Date()),
-        title: req.body.title
+        title: req.body.title,
     };
 
     DB.courses.push(createdCourse)
@@ -62,7 +71,7 @@ app.post('/courses', (req: Request, res: Response) => {
         .status(HTTP_STATUSES.CREATED_201)
         .json(createdCourse)
 })
-app.delete('/courses/:id', (req: Request, res: Response) => {
+app.delete('/courses/:id', (req: RequestWithParams<URIParamsCourseldModel>, res) => {
     for(let i = 0; i < DB.courses.length; ++i) {
         if(DB.courses[i].id === +req.params.id) {
             DB.courses = DB.courses.filter(c => c.id !== +req.params.id);
@@ -72,7 +81,7 @@ app.delete('/courses/:id', (req: Request, res: Response) => {
     }
     res.sendStatus(HTTP_STATUSES.NOT_FOUND_404)
 })
-app.put('/courses/:id', (req: Request, res: Response) => {
+app.put('/courses/:id', (req: RequestWithParamsAndBody<URIParamsCourseldModel, CourseUpdateInputModel>, res) => {
     if(!req.body.title) {
         res.sendStatus(HTTP_STATUSES.BAD_REQUEST_400)
         return;

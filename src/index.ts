@@ -1,9 +1,10 @@
 import express, {Request, Response} from 'express'
+import bodyParser from "body-parser";
 
-const app = express()
+export const app = express()
 const port = process.env.PORT || 3000
 
-const jsonBodyMiddleware = express.json()
+const jsonBodyMiddleware = bodyParser({})
 app.use(jsonBodyMiddleware)
 
 const DB = {
@@ -14,25 +15,32 @@ const DB = {
         {id: 4, title: 'automation qa'}
     ]
 };
+export const HTTP_STATUSES = {
+    OK_200: 200,
+    CREATED_201: 201,
+    NO_CONTENT_204: 204,
+
+    BAD_REQUEST_400: 400,
+    NOT_FOUND_404: 404
+}
+
 
 app.get('/', (req: Request, res: Response) => {
     res.send("Hi, i'm working")
 })
 app.get('/courses', (req: Request, res: Response) => {
-    let foundCourse = DB.courses
-
     if(req.query.title) {
-        foundCourse = foundCourse
-            .filter(c => c.title.indexOf(req.query.title as string) > -1)
+        let searchString = req.query.title.toString()
+        res.send(DB.courses.filter(p => p.title.indexOf(searchString) > -1))
+    } else {
+        res.send(DB.courses)
     }
-
-    res.json(foundCourse)
 })
 app.get('/courses/:id', (req: Request, res: Response) => {
     const foundCourse = DB.courses.find(c => c.id === +req.params.id);
 
     if (!foundCourse) {
-        res.sendStatus(404)
+        res.sendStatus(HTTP_STATUSES.NOT_FOUND_404)
         return;
     }
 
@@ -40,7 +48,7 @@ app.get('/courses/:id', (req: Request, res: Response) => {
 })
 app.post('/courses', (req: Request, res: Response) => {
     if(!req.body.title) {
-        res.sendStatus(400)
+        res.sendStatus(HTTP_STATUSES.BAD_REQUEST_400)
         return;
     }
 
@@ -51,29 +59,38 @@ app.post('/courses', (req: Request, res: Response) => {
 
     DB.courses.push(createdCourse)
     res
-        .status(201)
+        .status(HTTP_STATUSES.CREATED_201)
         .json(createdCourse)
 })
 app.delete('/courses/:id', (req: Request, res: Response) => {
-    DB.courses = DB.courses.filter(c => c.id !== +req.params.id);
-
-    res.sendStatus(204)
+    for(let i = 0; i < DB.courses.length; ++i) {
+        if(DB.courses[i].id === +req.params.id) {
+            DB.courses = DB.courses.filter(c => c.id !== +req.params.id);
+            res.sendStatus(HTTP_STATUSES.NO_CONTENT_204)
+            return;
+        }
+    }
+    res.sendStatus(HTTP_STATUSES.NOT_FOUND_404)
 })
 app.put('/courses/:id', (req: Request, res: Response) => {
     if(!req.body.title) {
-        res.sendStatus(400)
+        res.sendStatus(HTTP_STATUSES.BAD_REQUEST_400)
         return;
     }
 
     const foundCourse = DB.courses.find(c => c.id === +req.params.id);
 
     if (!foundCourse) {
-        res.sendStatus(404)
+        res.sendStatus(HTTP_STATUSES.NOT_FOUND_404)
         return;
     }
 
     foundCourse.title = req.body.title;
-    res.sendStatus(204)
+    res.sendStatus(HTTP_STATUSES.NO_CONTENT_204)
+})
+app.delete('/__test__/data', (req, res) => {
+    DB.courses = [];
+    res.sendStatus(HTTP_STATUSES.NO_CONTENT_204)
 })
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`)

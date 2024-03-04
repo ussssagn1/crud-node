@@ -1,8 +1,8 @@
-import {describe} from "node:test";
 import request from 'supertest'
-import {app, HTTP_STATUSES} from "../../src";
 import {CourseCreateInputModel} from "../../src/models/CourseCreateModel";
-
+import {app} from "../../src/app";
+import {CourseUpdateInputModel} from "../../src/models/CourseUpdateModel";
+import {HTTP_STATUSES} from "../../src/statuses";
 
 describe('/course', () => {
     beforeAll(async () => {
@@ -70,7 +70,7 @@ describe('/course', () => {
     })
 
     it("Shouldn't update course with incorrect input data", async () => {
-        const data: CourseCreateInputModel = {title: ''}
+        const data: CourseUpdateInputModel = {title: ''}
 
         await request(app)
             .put('/courses/' + createdCourseOne.id)
@@ -83,7 +83,7 @@ describe('/course', () => {
     })
 
     it("Shouldn't update course that not exist", async () => {
-        const data: CourseCreateInputModel = {title: 'good'}
+        const data: CourseUpdateInputModel = {title: 'good'}
         await request(app)
             .put('/courses/' + -100)
             .send(data)
@@ -91,7 +91,7 @@ describe('/course', () => {
     })
 
     it("Should update course with correct input data", async () => {
-        const data: CourseCreateInputModel = {title: 'goodnew'}
+        const data: CourseUpdateInputModel = {title: 'goodnew'}
         await request(app)
             .put('/courses/' + createdCourseOne.id)
             .send(data)

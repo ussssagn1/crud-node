@@ -1,11 +1,14 @@
 import {DBType} from "../DB/DB";
-import {HTTP_STATUSES} from "../statuses";
-import {Express} from "express";
+import {HTTP_STATUSES} from "../utils";
+import express from "express";
 
-export const addTestsRoutes = (app: Express, DB: DBType) => {
-    app.delete('/__test__/data', (req, res) => {
+export const getTestsRoutes = (DB: DBType) => {
+    const router = express.Router()
+
+    router.delete('/data', (req, res) => {
         DB.courses = [];
         res.sendStatus(HTTP_STATUSES.NO_CONTENT_204)
     })
 
+    return router;
 }

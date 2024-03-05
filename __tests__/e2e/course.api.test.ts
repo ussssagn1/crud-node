@@ -2,9 +2,9 @@ import request from 'supertest'
 import {CourseCreateInputModel} from "../../src/models/CourseCreateModel";
 import {app} from "../../src/app";
 import {CourseUpdateInputModel} from "../../src/models/CourseUpdateModel";
-import {HTTP_STATUSES} from "../../src/statuses";
+import {HTTP_STATUSES} from "../../src/utils";
 
-describe('/course', () => {
+describe('/courses', () => {
     beforeAll(async () => {
         await request(app).delete('/__test__/data')
     })

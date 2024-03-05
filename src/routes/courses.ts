@@ -1,12 +1,13 @@
-import express, {Express, Request, Response} from "express";
+import express, {Response} from "express";
 import {RequestWithBody, RequestWithParams, RequestWithParamsAndBody, RequestWithQuery} from "../types";
 import {CoursesQueryInputModel} from "../models/CoursesQueryModel";
 import {CourseViewModel} from "../models/CourseViewModel";
 import {URIParamsCourseldModel} from "../models/URIParamsCourseldModel";
 import {CourseCreateInputModel} from "../models/CourseCreateModel";
 import {CourseUpdateInputModel} from "../models/CourseUpdateModel";
-import {CourseType, DB, DBType} from "../DB/DB";
-import {HTTP_STATUSES} from "../statuses";
+import {CourseType, DBType} from "../DB/DB";
+import {HTTP_STATUSES} from "../utils";
+import {coursesRepository} from "../repos/coursesRepository";
 
 export const getCourseViewModel = (DB_COURSE: CourseType): CourseViewModel => {
     return {
@@ -15,16 +16,16 @@ export const getCourseViewModel = (DB_COURSE: CourseType): CourseViewModel => {
     }
 }
 
-export const getCoursesRoutes = (DB:DBType) => {
+export const getCoursesRouter = (DB:DBType) => {
     const coursesRouter = express.Router();
 
     coursesRouter.get('/', (req: RequestWithQuery<CoursesQueryInputModel>, res: Response<CourseViewModel[]>) => {
-        req.query.title ? res.send(DB.courses.filter(p => p.title.indexOf(req.query.title) > -1)) : res.send(DB.courses.map(getCourseViewModel))
+        const foundCourses = coursesRepository.findCourses(req.query.title)
+        res.send(foundCourses)
     })
 
     coursesRouter.get('/:id', (req: RequestWithParams<URIParamsCourseldModel>, res: Response<CourseViewModel>) => {
-        const foundCourse = DB.courses.find(c => c.id === +req.params.id);
-
+        const foundCourse = coursesRepository.getCourseByID(+req.params.id)
         if (!foundCourse) {
             res.sendStatus(HTTP_STATUSES.NOT_FOUND_404)
             return;
@@ -39,26 +40,17 @@ export const getCoursesRoutes = (DB:DBType) => {
             return;
         }
 
-        const createdCourse: CourseType = {
-            id: +(new Date()),
-            title: req.body.title,
-        };
+        const createdCourse = coursesRepository.creatCourses(req.body.title) // REPO
 
-        DB.courses.push(createdCourse)
         res
             .status(HTTP_STATUSES.CREATED_201)
             .json(getCourseViewModel(createdCourse))
     })
 
     coursesRouter.delete('/:id', (req: RequestWithParams<URIParamsCourseldModel>, res: Response) => {
-        for(let i = 0; i < DB.courses.length; ++i) {
-            if(DB.courses[i].id === +req.params.id) {
-                DB.courses = DB.courses.filter(c => c.id !== +req.params.id);
-                res.sendStatus(HTTP_STATUSES.NO_CONTENT_204)
-                return;
-            }
-        }
-        res.sendStatus(HTTP_STATUSES.NOT_FOUND_404)
+        const isDeleted = coursesRepository.deleteCourse(+req.params.id)
+        isDeleted ? res.sendStatus(HTTP_STATUSES.NO_CONTENT_204) : res.sendStatus(HTTP_STATUSES.NOT_FOUND_404)
+
     })
 
     coursesRouter.put('/:id', (req: RequestWithParamsAndBody<URIParamsCourseldModel, CourseUpdateInputModel>, res: Response) => {
@@ -67,16 +59,24 @@ export const getCoursesRoutes = (DB:DBType) => {
             return;
         }
 
-        const foundCourse = DB.courses.find(c => c.id === +req.params.id);
+        const updateResult = coursesRepository.updateCourse(+req.params.id, req.body.title);
 
-        if (!foundCourse) {
-            res.sendStatus(HTTP_STATUSES.NOT_FOUND_404)
-            return;
-        }
-
-        foundCourse.title = req.body.title;
-        res.sendStatus(HTTP_STATUSES.NO_CONTENT_204)
+        res.sendStatus(updateResult.status);
     })
 
+    return coursesRouter;
+}
+
+export const getInterestingBooksRouter = (DB:DBType) => {
+    const coursesRouter = express.Router();
+
+    coursesRouter.get('/books', (req: RequestWithQuery<CoursesQueryInputModel>, res) => {
+        res.json({title: 'books'})
+    })
+
+    coursesRouter.get('/:id', (req: RequestWithParams<URIParamsCourseldModel>, res) => {
+
+        res.json({title: 'data by id: ' + req.params.id})
+    })
     return coursesRouter;
 }

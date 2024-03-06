@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const supertest_1 = __importDefault(require("supertest"));
 const app_1 = require("../../src/app");
 const utils_1 = require("../../src/utils");
-describe('/course', () => {
+describe('/courses', () => {
     beforeAll(async () => {
         await (0, supertest_1.default)(app_1.app).delete('/__test__/data');
     });

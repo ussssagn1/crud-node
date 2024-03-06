@@ -8,6 +8,8 @@ import {CourseUpdateInputModel} from "../models/CourseUpdateModel";
 import {CourseType, DBType} from "../DB/DB";
 import {HTTP_STATUSES} from "../utils";
 import {coursesRepository} from "../repos/coursesRepository";
+import {body, validationResult} from "express-validator";
+import {inputValidationMiddlewares} from "../middleware/input-validation-middlewares";
 
 export const getCourseViewModel = (DB_COURSE: CourseType): CourseViewModel => {
     return {
@@ -15,16 +17,28 @@ export const getCourseViewModel = (DB_COURSE: CourseType): CourseViewModel => {
         title: DB_COURSE.title
     }
 }
+const titleValidation = body('title').trim().isLength({
+    min: 3,
+    max: 30
+}).withMessage('title length')
 
 export const getCoursesRouter = (DB:DBType) => {
     const coursesRouter = express.Router();
 
-    coursesRouter.get('/', (req: RequestWithQuery<CoursesQueryInputModel>, res: Response<CourseViewModel[]>) => {
+    coursesRouter.get('/',
+        body('title').isEmpty(),
+        (req: RequestWithQuery<CoursesQueryInputModel>, res: Response<CourseViewModel[]>) => {
+        const errors = validationResult(req);
+        if(!errors.isEmpty()) {
+            return res.sendStatus(HTTP_STATUSES.BAD_REQUEST_400)
+        }
+
         const foundCourses = coursesRepository.findCourses(req.query.title)
-        res.send(foundCourses)
+        res.status(HTTP_STATUSES.OK_200).send(foundCourses)
     })
 
-    coursesRouter.get('/:id', (req: RequestWithParams<URIParamsCourseldModel>, res: Response<CourseViewModel>) => {
+    coursesRouter.get('/:id',
+        (req: RequestWithParams<URIParamsCourseldModel>, res: Response<CourseViewModel>) => {
         const foundCourse = coursesRepository.getCourseByID(+req.params.id)
         if (!foundCourse) {
             res.sendStatus(HTTP_STATUSES.NOT_FOUND_404)
@@ -34,7 +48,19 @@ export const getCoursesRouter = (DB:DBType) => {
         res.json(getCourseViewModel(foundCourse))
     })
 
-    coursesRouter.post('/', (req: RequestWithBody<CourseCreateInputModel>, res: Response<CourseViewModel>) => {
+    coursesRouter.post('/',
+        titleValidation,
+        inputValidationMiddlewares,
+        (req: RequestWithBody<CourseCreateInputModel>, res: Response<CourseViewModel>) => {
+
+
+        // ERRORS
+        const errors = validationResult(req);
+        if(!errors.isEmpty()) {
+            return res.sendStatus(HTTP_STATUSES.BAD_REQUEST_400)
+        }
+        // ERRORS
+
         if(!req.body.title) {
             res.sendStatus(HTTP_STATUSES.BAD_REQUEST_400)
             return;
@@ -47,13 +73,17 @@ export const getCoursesRouter = (DB:DBType) => {
             .json(getCourseViewModel(createdCourse))
     })
 
-    coursesRouter.delete('/:id', (req: RequestWithParams<URIParamsCourseldModel>, res: Response) => {
+    coursesRouter.delete('/:id',
+        (req: RequestWithParams<URIParamsCourseldModel>, res: Response) => {
         const isDeleted = coursesRepository.deleteCourse(+req.params.id)
         isDeleted ? res.sendStatus(HTTP_STATUSES.NO_CONTENT_204) : res.sendStatus(HTTP_STATUSES.NOT_FOUND_404)
 
     })
 
-    coursesRouter.put('/:id', (req: RequestWithParamsAndBody<URIParamsCourseldModel, CourseUpdateInputModel>, res: Response) => {
+    coursesRouter.put('/:id',
+        titleValidation,
+        inputValidationMiddlewares,
+        (req: RequestWithParamsAndBody<URIParamsCourseldModel, CourseUpdateInputModel>, res: Response) => {
         if(!req.body.title) {
             res.sendStatus(HTTP_STATUSES.BAD_REQUEST_400)
             return;

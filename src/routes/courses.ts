@@ -25,8 +25,7 @@ const titleValidation = body('title').trim().isLength({
 export const getCoursesRouter = (DB:DBType) => {
     const coursesRouter = express.Router();
 
-    coursesRouter.get('/',
-        body('title').isEmpty(),
+    coursesRouter.get('/', body('title').isEmpty(),
         async (req: RequestWithQuery<CoursesQueryInputModel>, res: Response<CourseViewModel[]>) => {
         const errors = validationResult(req);
         if(!errors.isEmpty()) {
@@ -49,10 +48,8 @@ export const getCoursesRouter = (DB:DBType) => {
         res.json(getCourseViewModel(foundCourse))
     })
 
-    coursesRouter.post('/',
-        titleValidation,
-        inputValidationMiddlewares,
-        (req: RequestWithBody<CourseCreateInputModel>, res: Response<CourseViewModel>) => {
+    coursesRouter.post('/', titleValidation, inputValidationMiddlewares,
+        async (req: RequestWithBody<CourseCreateInputModel>, res: Response<CourseViewModel>) => {
 
 
         // ERRORS
@@ -67,7 +64,7 @@ export const getCoursesRouter = (DB:DBType) => {
             return;
         }
 
-        const createdCourse = coursesRepository.creatCourses(req.body.title) // REPO
+        const createdCourse = await coursesRepository.creatCourses(req.body.title) // REPO
 
         res
             .status(HTTP_STATUSES.CREATED_201)
@@ -81,16 +78,14 @@ export const getCoursesRouter = (DB:DBType) => {
 
     })
 
-    coursesRouter.put('/:id',
-        titleValidation,
-        inputValidationMiddlewares,
-        (req: RequestWithParamsAndBody<URIParamsCourseldModel, CourseUpdateInputModel>, res: Response) => {
+    coursesRouter.put('/:id', titleValidation, inputValidationMiddlewares,
+        async (req: RequestWithParamsAndBody<URIParamsCourseldModel, CourseUpdateInputModel>, res: Response) => {
         if(!req.body.title) {
             res.sendStatus(HTTP_STATUSES.BAD_REQUEST_400)
             return;
         }
 
-        const updateResult = coursesRepository.updateCourse(+req.params.id, req.body.title);
+        const updateResult = await coursesRepository.updateCourse(+req.params.id, req.body.title);
 
         res.sendStatus(updateResult.status);
     })

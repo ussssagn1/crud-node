@@ -12,7 +12,7 @@ export const coursesRepository = {
         }
     },
 
-    creatCourses(title: string) {
+    async creatCourses(title: string) {
 
         const createdCourse: CourseType = {
             id: +(new Date()),
@@ -28,7 +28,7 @@ export const coursesRepository = {
         return product;
     },
 
-    updateCourse(id: number, title: string) {
+    async updateCourse(id: number, title: string) {
         const foundCourse = DB.courses.find(c => c.id === id);
 
         if (!foundCourse) {

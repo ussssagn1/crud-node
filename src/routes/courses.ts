@@ -27,13 +27,14 @@ export const getCoursesRouter = (DB:DBType) => {
 
     coursesRouter.get('/',
         body('title').isEmpty(),
-        (req: RequestWithQuery<CoursesQueryInputModel>, res: Response<CourseViewModel[]>) => {
+        async (req: RequestWithQuery<CoursesQueryInputModel>, res: Response<CourseViewModel[]>) => {
         const errors = validationResult(req);
         if(!errors.isEmpty()) {
             return res.sendStatus(HTTP_STATUSES.BAD_REQUEST_400)
         }
 
-        const foundCourses = coursesRepository.findCourses(req.query.title)
+        const foundCoursesPromise = coursesRepository.findCourses(req.query.title);
+        const foundCourses = await foundCoursesPromise;
         res.status(HTTP_STATUSES.OK_200).send(foundCourses)
     })
 

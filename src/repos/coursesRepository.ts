@@ -4,7 +4,7 @@ import {HTTP_STATUSES} from "../utils";
 
 
 export const coursesRepository = {
-    findCourses(title: string | null | undefined) {
+    async findCourses(title: string | null | undefined) {
         if(title) {
             return DB.courses.filter(p => p.title.indexOf(title) > -1)
         } else {

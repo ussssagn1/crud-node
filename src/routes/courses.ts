@@ -7,7 +7,7 @@ import {CourseCreateInputModel} from "../models/CourseCreateModel";
 import {CourseUpdateInputModel} from "../models/CourseUpdateModel";
 import {CourseType, DBType} from "../DB/DB";
 import {HTTP_STATUSES} from "../utils";
-import {coursesRepository} from "../repos/coursesRepository-db";
+import {coursesService} from "../domain/products-service";
 import {body, validationResult} from "express-validator";
 import {inputValidationMiddlewares} from "../middleware/input-validation-middlewares";
 
@@ -32,14 +32,14 @@ export const getCoursesRouter = (DB:DBType) => {
             return res.sendStatus(HTTP_STATUSES.BAD_REQUEST_400)
         }
 
-        const foundCoursesPromise = coursesRepository.findCourses(req.query.title);
+        const foundCoursesPromise = coursesService.findCourses(req.query.title);
         const foundCourses = await foundCoursesPromise;
         res.status(HTTP_STATUSES.OK_200).send(foundCourses)
     })
 
     coursesRouter.get('/:id',
         async (req: RequestWithParams<URIParamsCourseldModel>, res: Response<CourseViewModel>) => {
-        const foundCourse = await coursesRepository.getCourseByID(+req.params.id)
+        const foundCourse = await coursesService.getCourseByID(+req.params.id)
         if (!foundCourse) {
             res.sendStatus(HTTP_STATUSES.NOT_FOUND_404)
             return;
@@ -64,7 +64,7 @@ export const getCoursesRouter = (DB:DBType) => {
             return;
         }
 
-        const createdCourse = await coursesRepository.creatCourses(req.body.title) // REPO
+        const createdCourse = await coursesService.creatCourses(req.body.title) // REPO
 
         res
             .status(HTTP_STATUSES.CREATED_201)
@@ -73,7 +73,7 @@ export const getCoursesRouter = (DB:DBType) => {
 
     coursesRouter.delete('/:id',
         async (req: RequestWithParams<URIParamsCourseldModel>, res: Response) => {
-        const isDeleted = await coursesRepository.deleteCourse(+req.params.id)
+        const isDeleted = await coursesService.deleteCourse(+req.params.id)
         isDeleted ? res.sendStatus(HTTP_STATUSES.NO_CONTENT_204) : res.sendStatus(HTTP_STATUSES.NOT_FOUND_404)
 
     })
@@ -85,7 +85,7 @@ export const getCoursesRouter = (DB:DBType) => {
             return;
         }
 
-        const updateResult = await coursesRepository.updateCourse(+req.params.id, req.body.title);
+        const updateResult = await coursesService.updateCourse(+req.params.id, req.body.title);
 
         res.sendStatus(updateResult.status);
     })

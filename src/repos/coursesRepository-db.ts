@@ -13,12 +13,7 @@ export const coursesRepository = {
         return CourseCollection.find(filter).toArray()
     },
 
-    async creatCourses(title: string) {
-
-        const createdCourse: CourseType = {
-            id: +(new Date()),
-            title: title,
-        };
+    async creatCourses(createdCourse: CourseType) {
 
         const result = await CourseCollection.insertOne(createdCourse)
 

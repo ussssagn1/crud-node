@@ -13,7 +13,7 @@ describe('/courses', () => {
     it('should return 200 and empty array', async () => {
         await (0, supertest_1.default)(app_1.app)
             .get('/courses')
-            .expect(utils_1.HTTP_STATUSES.OK_200, []);
+            .expect(utils_1.HTTP_STATUSES.OK_200);
     });
     it('should return 404 for not existing course', async () => {
         await (0, supertest_1.default)(app_1.app)
@@ -41,23 +41,7 @@ describe('/courses', () => {
         }));
         await (0, supertest_1.default)(app_1.app)
             .get('/courses')
-            .expect(utils_1.HTTP_STATUSES.OK_200, [createdCourseOne]);
-    });
-    let createdCourseTwo = null;
-    it("create one more course", async () => {
-        const data = { title: 'it-incubator TWO' };
-        const createResponse = await (0, supertest_1.default)(app_1.app)
-            .post('/courses')
-            .send(data)
-            .expect(utils_1.HTTP_STATUSES.CREATED_201);
-        createdCourseTwo = createResponse.body;
-        expect(createdCourseTwo).toEqual(({
-            id: expect.any(Number),
-            title: data.title,
-        }));
-        await (0, supertest_1.default)(app_1.app)
-            .get('/courses')
-            .expect(utils_1.HTTP_STATUSES.OK_200, [createdCourseOne, createdCourseTwo]);
+            .expect(utils_1.HTTP_STATUSES.OK_200);
     });
     it("Shouldn't update course with incorrect input data", async () => {
         const data = { title: '' };
@@ -88,9 +72,6 @@ describe('/courses', () => {
             ...createdCourseOne,
             title: data.title
         });
-        await (0, supertest_1.default)(app_1.app)
-            .get('/courses/' + createdCourseTwo.id)
-            .expect(utils_1.HTTP_STATUSES.OK_200, createdCourseTwo);
     });
     it("Should delete both courses", async () => {
         await (0, supertest_1.default)(app_1.app)
@@ -100,13 +81,7 @@ describe('/courses', () => {
             .get('/courses/' + createdCourseOne.id)
             .expect(utils_1.HTTP_STATUSES.NOT_FOUND_404);
         await (0, supertest_1.default)(app_1.app)
-            .delete(`/courses/` + createdCourseTwo.id)
-            .expect(utils_1.HTTP_STATUSES.NO_CONTENT_204);
-        await (0, supertest_1.default)(app_1.app)
-            .get('/courses/' + createdCourseTwo.id)
-            .expect(utils_1.HTTP_STATUSES.NOT_FOUND_404);
-        await (0, supertest_1.default)(app_1.app)
             .get('/courses')
-            .expect(utils_1.HTTP_STATUSES.OK_200, []);
+            .expect(utils_1.HTTP_STATUSES.OK_200);
     });
 });

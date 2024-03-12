@@ -23,7 +23,7 @@ export const coursesRepository = {
         return createdCourse;
     },
 
-    getCourseByID(id: number) {
+    async getCourseByID(id: number) {
         let product = DB.courses.find(c => c.id === id);
         return product;
     },
@@ -40,7 +40,7 @@ export const coursesRepository = {
         }
     },
 
-    deleteCourse(id: number) {
+    async deleteCourse(id: number) {
         for(let i = 0; i < DB.courses.length; ++i) {
             if(DB.courses[i].id === id) {
                 DB.courses = DB.courses.filter(c => c.id !== id);

@@ -7,7 +7,7 @@ import {CourseCreateInputModel} from "../models/CourseCreateModel";
 import {CourseUpdateInputModel} from "../models/CourseUpdateModel";
 import {CourseType, DBType} from "../DB/DB";
 import {HTTP_STATUSES} from "../utils";
-import {coursesRepository} from "../repos/coursesRepository";
+import {coursesRepository} from "../repos/coursesRepository-db";
 import {body, validationResult} from "express-validator";
 import {inputValidationMiddlewares} from "../middleware/input-validation-middlewares";
 
@@ -38,8 +38,8 @@ export const getCoursesRouter = (DB:DBType) => {
     })
 
     coursesRouter.get('/:id',
-        (req: RequestWithParams<URIParamsCourseldModel>, res: Response<CourseViewModel>) => {
-        const foundCourse = coursesRepository.getCourseByID(+req.params.id)
+        async (req: RequestWithParams<URIParamsCourseldModel>, res: Response<CourseViewModel>) => {
+        const foundCourse = await coursesRepository.getCourseByID(+req.params.id)
         if (!foundCourse) {
             res.sendStatus(HTTP_STATUSES.NOT_FOUND_404)
             return;
@@ -72,8 +72,8 @@ export const getCoursesRouter = (DB:DBType) => {
     })
 
     coursesRouter.delete('/:id',
-        (req: RequestWithParams<URIParamsCourseldModel>, res: Response) => {
-        const isDeleted = coursesRepository.deleteCourse(+req.params.id)
+        async (req: RequestWithParams<URIParamsCourseldModel>, res: Response) => {
+        const isDeleted = await coursesRepository.deleteCourse(+req.params.id)
         isDeleted ? res.sendStatus(HTTP_STATUSES.NO_CONTENT_204) : res.sendStatus(HTTP_STATUSES.NOT_FOUND_404)
 
     })
@@ -90,19 +90,5 @@ export const getCoursesRouter = (DB:DBType) => {
         res.sendStatus(updateResult.status);
     })
 
-    return coursesRouter;
-}
-
-export const getInterestingBooksRouter = (DB:DBType) => {
-    const coursesRouter = express.Router();
-
-    coursesRouter.get('/books', (req: RequestWithQuery<CoursesQueryInputModel>, res) => {
-        res.json({title: 'books'})
-    })
-
-    coursesRouter.get('/:id', (req: RequestWithParams<URIParamsCourseldModel>, res) => {
-
-        res.json({title: 'data by id: ' + req.params.id})
-    })
     return coursesRouter;
 }
